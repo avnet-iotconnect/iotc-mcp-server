@@ -1,4 +1,13 @@
 /.idea/
 /.vscode/
+
+# Safe space for temporary work files or AI transient instrcutions
 /work*/
 
+# Python
+/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/

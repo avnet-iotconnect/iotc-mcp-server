@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2026 Avnet
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iotc-mcp-server"
+version = "0.1.0"
+description = "MCP server exposing Avnet /IOTCONNECT REST API operations to MCP clients."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Avnet" }]
+license = { text = "MIT" }
+keywords = ["IoTConnect", "MCP", "AI", "agents"]
+dependencies = [
+    "mcp>=1.27.0",
+    "iotconnect-rest-api>=2.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/avnet-iotconnect/iotc-mcp-server"
+
+[project.scripts]
+iotc-mcp-server = "iotc_mcp_server.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
