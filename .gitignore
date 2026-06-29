@@ -3,6 +3,8 @@
 
 # Safe space for temporary work files or AI transient instrcutions
 /work*/
+/.ai
+
 
 # Python
 /.venv/
