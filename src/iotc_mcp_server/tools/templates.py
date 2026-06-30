@@ -85,3 +85,19 @@ def register(mcp: FastMCP) -> None:
         """
         result = await call_lib(template.create_from_json_str, template_json, code, name)
         return {"template_guid": result.deviceTemplateGuid}
+
+    @mcp.tool(annotations=_DESTRUCTIVE)
+    async def template_delete(code: Optional[str] = None, guid: Optional[str] = None) -> dict:
+        """Delete a template by template code (preferred) or GUID. DESTRUCTIVE and irreversible.
+
+        A template still attached to devices cannot be deleted (the API reports a
+        conflict). Confirm with the user before calling.
+        """
+        if code:
+            await call_lib(template.delete_match_code, code)
+            return {"deleted": True, "code": code}
+        elif guid:
+            await call_lib(template.delete_match_guid, guid)
+            return {"deleted": True, "guid": guid}
+        else:
+            return {"error": "Provide either code or guid."}
