@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Avnet
 
-"""Template tools: list device templates with filtering, and get one full record."""
+"""Template tools: list / get device templates, and create one from a JSON definition."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from ..errors import call_lib
 from ..serialization import full_record, template_compact
 
 _READ = ToolAnnotations(readOnlyHint=True)
+_DESTRUCTIVE = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
 
 
 def register(mcp: FastMCP) -> None:
@@ -68,3 +69,19 @@ def register(mcp: FastMCP) -> None:
         if t is None:
             return {"found": False}
         return full_record(t)
+
+    @mcp.tool(annotations=_DESTRUCTIVE)
+    async def template_create(
+        template_json: str,
+        code: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> dict:
+        """Create a device template from a full template JSON definition. DESTRUCTIVE.
+
+        `template_json` is the complete template definition; ask the user to paste it -
+        it is too detailed to author from a description. `code` (1-10 alphanumeric chars)
+        and `name` optionally override the code/name in the JSON. Returns the new
+        template GUID.
+        """
+        result = await call_lib(template.create_from_json_str, template_json, code, name)
+        return {"template_guid": result.deviceTemplateGuid}
