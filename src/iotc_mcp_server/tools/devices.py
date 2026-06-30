@@ -10,7 +10,7 @@ from typing import Literal, Optional
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
-from avnet.iotconnect.restapi.lib import config, device
+from avnet.iotconnect.restapi.lib import accesstoken, config, device
 from avnet.iotconnect.restapi.lib.device import DeviceQuery, DeviceStatus
 
 from ..errors import call_lib
@@ -85,10 +85,23 @@ def register(mcp: FastMCP) -> None:
         """Register a new x509 device. DESTRUCTIVE: creates a real account resource.
 
         `template` is a template code or GUID; `entity` is an entity name or GUID
-        (defaults to the account root). If `certificate` (a PEM string) is omitted, a
-        self-signed EC cert + private key are generated and BOTH are returned to you -
-        present the private_key to the user once and tell them to store it securely.
+        (defaults to the account root). `name` is the display label and defaults to the
+        DUID. If `certificate` (a PEM string) is omitted, a self-signed EC cert + private
+        key are generated and BOTH are returned to you - present the private_key to the
+        user once and tell them to store it securely.
+
+        The response includes an `sdk_config` block (platform, env, cpid, duid) - the
+        non-secret values the device's SDK config needs alongside the certificate.
         """
+
+        def _sdk_config(duid: str) -> dict:
+            return {
+                "platform": config.pf,
+                "env": config.env,
+                "cpid": accesstoken.decode_access_token().user.cpId,
+                "duid": duid,
+            }
+
         if certificate:
             result = await call_lib(
                 device.create, template, duid,
@@ -99,6 +112,7 @@ def register(mcp: FastMCP) -> None:
                 "device_guid": result.newid,
                 "entity_guid": result.entityGuid,
                 "certificate_provided": True,
+                "sdk_config": _sdk_config(result.uniqueId),
             }
 
         private_key, cert_pem = await call_lib(config.generate_ec_cert_and_pkey, duid)
@@ -112,7 +126,8 @@ def register(mcp: FastMCP) -> None:
             "entity_guid": result.entityGuid,
             "certificate": cert_pem,
             "private_key": private_key,
-            "warning": "Store the private_key securely now. It is shown only once and is never logged.",
+            "sdk_config": _sdk_config(result.uniqueId),
+            "warning": "Store the private_key now (shown once), then delete this chat - the key persists in history.",
         }
 
     @mcp.tool(annotations=_DESTRUCTIVE)
@@ -144,5 +159,5 @@ def register(mcp: FastMCP) -> None:
             "duid": duid,
             "certificate": cert_pem,
             "private_key": private_key,
-            "warning": "Store the private_key securely now. It is shown only once and is never logged.",
+            "warning": "Store the private_key now (shown once), then delete this chat - the key persists in history.",
         }
