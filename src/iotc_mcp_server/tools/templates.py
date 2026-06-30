@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 Avnet
 
-"""Template tools: list device templates with filtering."""
+"""Template tools: list device templates with filtering, and get one full record."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from avnet.iotconnect.restapi.lib import template
 from avnet.iotconnect.restapi.lib.template import TemplateQuery
 
 from ..errors import call_lib
-from ..serialization import template_compact
+from ..serialization import full_record, template_compact
 
 _READ = ToolAnnotations(readOnlyHint=True)
 
@@ -51,3 +51,20 @@ def register(mcp: FastMCP) -> None:
             "page_size": result.page_size,
             "has_next": result.has_next,
         }
+
+    @mcp.tool(annotations=_READ)
+    async def template_get(code: Optional[str] = None, guid: Optional[str] = None) -> dict:
+        """Get one template's full record by template code (preferred) or GUID.
+
+        Use the GUID when you already have one (e.g. from a device record). Returns
+        {"found": false}if no such template exists.
+        """
+        if code:
+            t = await call_lib(template.get_by_template_code, code)
+        elif guid:
+            t = await call_lib(template.get_by_guid, guid)
+        else:
+            return {"error": "Provide either code or guid."}
+        if t is None:
+            return {"found": False}
+        return full_record(t)
