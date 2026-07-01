@@ -10,7 +10,7 @@ from typing import Literal, Optional
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
-from avnet.iotconnect.restapi.lib import accesstoken, config, device
+from avnet.iotconnect.restapi.lib import accesstoken, authtype, config, device
 from avnet.iotconnect.restapi.lib.device import DeviceQuery, DeviceStatus
 
 from ..errors import call_lib
@@ -76,25 +76,41 @@ def register(mcp: FastMCP) -> None:
         name: Optional[str] = None,
         entity: Optional[str] = None,
         certificate: Optional[str] = None,
+        ca_signed: bool = False,
     ) -> dict:
         """Register a new x509 device. DESTRUCTIVE: creates a real account resource.
 
         `template` is a template code or GUID; `entity` is an entity name or GUID
         (defaults to the account root). `name` is the display label and defaults to the
-        DUID. If `certificate` (a PEM string) is omitted, a self-signed EC cert + private
-        key are generated and BOTH are returned to you - present the private_key to the
-        user once and tell them to store it securely.
+        DUID. The auth mode must match the template's auth type:
+        - default (no cert): a self-signed EC cert + private key are generated and BOTH
+          returned - present the private_key to the user once and tell them to store it;
+        - `certificate` (a PEM string): register the caller's own self-signed cert;
+        - `ca_signed=true`: a CA-signed device - no cert is passed, generated or returned.
 
-        The response includes an `sdk_config` block (platform, env, cpid, duid) - the
-        non-secret values the device's SDK config needs alongside the certificate.
+        The response includes an `sdk_config` block (platform, env, cpid, duid, auth_type)
+        - the non-secret values the device's SDK config (iotcDeviceConfig.json) needs.
         """
 
-        def _sdk_config(duid: str) -> dict:
+        def _sdk_config(duid: str, auth_type: int) -> dict:
             return {
                 "platform": config.pf,
                 "env": config.env,
                 "cpid": accesstoken.decode_access_token().user.cpId,
                 "duid": duid,
+                "auth_type": auth_type,
+            }
+
+        if ca_signed:
+            result = await call_lib(
+                device.create, template, duid,
+                name=name, is_ca_auth=True, entity_guid=entity,
+            )
+            return {
+                "duid": result.uniqueId,
+                "device_guid": result.newid,
+                "entity_guid": result.entityGuid,
+                "sdk_config": _sdk_config(result.uniqueId, authtype.AT_CA_SIGNED),
             }
 
         if certificate:
@@ -107,7 +123,7 @@ def register(mcp: FastMCP) -> None:
                 "device_guid": result.newid,
                 "entity_guid": result.entityGuid,
                 "certificate_provided": True,
-                "sdk_config": _sdk_config(result.uniqueId),
+                "sdk_config": _sdk_config(result.uniqueId, authtype.AT_SELF_SIGNED),
             }
 
         private_key, cert_pem = await call_lib(config.generate_ec_cert_and_pkey, duid)
@@ -121,7 +137,7 @@ def register(mcp: FastMCP) -> None:
             "entity_guid": result.entityGuid,
             "certificate": cert_pem,
             "private_key": private_key,
-            "sdk_config": _sdk_config(result.uniqueId),
+            "sdk_config": _sdk_config(result.uniqueId, authtype.AT_SELF_SIGNED),
             "warning": "Store the private_key now (shown once), then delete this chat - the key persists in history.",
         }
 

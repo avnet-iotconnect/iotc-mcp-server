@@ -93,11 +93,15 @@ Times are UTC. History iterates per device, so large device lists cost more call
 _DEVICES = """\
 # Device lifecycle
 
-- Create (device_create): needs a template (code/GUID) and a DUID. Pass a `certificate`
-  (PEM) to register with it, or omit it to have the server generate a self-signed EC
-  cert + private key, register, and return BOTH - show the private key once, tell the
-  user to store it, then clear the chat. The response also carries an `sdk_config` block
-  (platform, env, cpid, duid) for the device's SDK config.
+- Create (device_create): needs a template (code/GUID) and a DUID; the auth mode must
+  match the template's auth type:
+  - default (no cert): server generates a self-signed EC cert + private key, registers,
+    and returns BOTH - show the private key once, tell the user to store it, then clear
+    the chat;
+  - `certificate` (PEM): register the caller's own self-signed cert;
+  - `ca_signed=true`: CA-signed device - no cert is passed, generated, or returned.
+  The response carries an `sdk_config` block (platform, env, cpid, duid, auth_type) for
+  the device's SDK config (iotcDeviceConfig.json).
 - Activate/deactivate (device_set_active): toggles connectivity status.
 - Delete (device_delete): irreversible. REST-created devices cannot be deleted from
   the web UI, so this tool is the intended path.
