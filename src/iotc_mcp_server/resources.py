@@ -22,7 +22,8 @@ INSTRUCTIONS = (
     "plus paging info; use the matching *_get for a full record. Read iotc://guide/* for "
     "concepts. Writes (create/delete/activate device, send command) are real and "
     "irreversible - confirm with the user before calling them. If a tool reports an "
-    "auth error, the user must run `iotconnect-cli configure` out-of-band."
+    "auth error, call auth_status - it will try to refresh the session so you can retry; "
+    "only if it still fails must the user run `iotconnect-cli configure` out-of-band."
 )
 
 _OVERVIEW = """\

@@ -28,7 +28,10 @@ from avnet.iotconnect.restapi.lib.error import (
 
 T = TypeVar("T")
 
-CONFIGURE_HINT = "Run `iotconnect-cli configure` to (re)authenticate."
+CONFIGURE_HINT = (
+    "Call auth_status to refresh the session, then retry; "
+    "if it still fails, run `iotconnect-cli configure` to (re)authenticate."
+)
 
 
 def _is_auth_usage_error(exc: UsageError) -> bool:
