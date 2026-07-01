@@ -14,7 +14,7 @@ from avnet.iotconnect.restapi.lib import entity
 from avnet.iotconnect.restapi.lib.query import is_guid
 
 from ..errors import call_lib
-from ..serialization import entity_compact
+from ..serialization import entity_compact, full_record
 
 _READ = ToolAnnotations(readOnlyHint=True)
 
@@ -42,12 +42,30 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(annotations=_READ)
     async def entity_list() -> dict:
-        """List every entity in the account (the org tree).
+        """List every entity in the account (the whole org tree, unpaged).
 
-        Entities form a tree via parent_guid; the root entity has parent_guid null.
+        Entities form a tree via parent_guid; the root entity has parent_guid null. Use
+        entity_get (by name or guid) for one entity's full record.
         """
         entities = await call_lib(entity.query)
         return {"entities": [entity_compact(e) for e in entities], "total_count": len(entities)}
+
+    @mcp.tool(annotations=_READ)
+    async def entity_get(name: Optional[str] = None, guid: Optional[str] = None) -> dict:
+        """Get one entity's full record by name (preferred) or GUID.
+
+        Use the GUID when you already have one (e.g. a device's entity). Includes the
+        address detail that entity_list omits. Returns {"found": false} if none matches.
+        """
+        if name:
+            e = await call_lib(entity.get_by_name, name)
+        elif guid:
+            e = await call_lib(entity.get_by_guid, guid)
+        else:
+            return {"error": "Provide either name or guid."}
+        if e is None:
+            return {"found": False}
+        return full_record(e)
 
     @mcp.tool(annotations=_READ)
     async def entity_descendants(name: Optional[str] = None, guid: Optional[str] = None) -> dict:

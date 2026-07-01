@@ -14,7 +14,7 @@ from avnet.iotconnect.restapi.lib import accesstoken, config, device
 from avnet.iotconnect.restapi.lib.device import DeviceQuery, DeviceStatus
 
 from ..errors import call_lib
-from ..serialization import device_compact, full_record
+from ..serialization import device_compact, full_record, paged_result
 
 _READ = ToolAnnotations(readOnlyHint=True)
 _DESTRUCTIVE = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
@@ -24,8 +24,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(annotations=_READ)
     async def device_list(
-        duid: Optional[str] = None,
-        name: Optional[str] = None,
+        duid_contains: Optional[str] = None,
         status: Optional[Literal["active", "inactive"]] = None,
         template: Optional[str] = None,
         entity: Optional[str] = None,
@@ -38,25 +37,21 @@ def register(mcp: FastMCP) -> None:
     ) -> dict:
         """List devices with server-side filtering and paging.
 
-        `template` accepts a template code or GUID; `entity` accepts an entity name
-        or GUID (resolved for you - do not invent GUIDs). `sort` is a field plus
-        direction, e.g. "displayName asc". Returns compact rows plus total_count and
-        has_next; use device_get for a single full record.
+        `duid_contains` matches devices whose DUID contains that text (case-insensitive
+        substring); for one exact device use device_get instead. `template` accepts a
+        template code or GUID; `entity` accepts an entity name or GUID (resolved for you -
+        do not invent GUIDs). `sort` is a field plus direction, e.g. "displayName asc".
+        Returns compact rows plus has_next (and total_count when the server reports one);
+        use device_get for a single full record.
         """
         query = DeviceQuery(
-            duid=duid, name=name, template=template, entity=entity,
+            duid_contains=duid_contains, template=template, entity=entity,
             status=DeviceStatus(status) if status else None,
             is_edge=is_edge, is_gateway=is_gateway, wireless=wireless,
             page=page, page_size=page_size, sort_by=sort,
         )
         result = await call_lib(device.query, query)
-        return {
-            "devices": [device_compact(d) for d in result.items],
-            "total_count": result.total_count,
-            "page": result.page_number,
-            "page_size": result.page_size,
-            "has_next": result.has_next,
-        }
+        return paged_result("devices", [device_compact(d) for d in result.items], result)
 
     @mcp.tool(annotations=_READ)
     async def device_get(duid: Optional[str] = None, guid: Optional[str] = None) -> dict:

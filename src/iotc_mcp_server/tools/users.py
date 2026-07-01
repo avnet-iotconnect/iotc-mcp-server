@@ -14,7 +14,7 @@ from avnet.iotconnect.restapi.lib import user
 from avnet.iotconnect.restapi.lib.user import UserQuery
 
 from ..errors import call_lib
-from ..serialization import user_compact
+from ..serialization import paged_result, user_compact
 
 _READ = ToolAnnotations(readOnlyHint=True)
 
@@ -36,7 +36,7 @@ def register(mcp: FastMCP) -> None:
         """List account users with server-side filtering and paging.
 
         `entity` and `role` are matched by name. `status` is e.g. "active"/"inactive".
-        Returns compact rows plus total_count and has_next.
+        Returns compact rows plus has_next (and total_count when the server reports one).
         """
         query = UserQuery(
             first_name=first_name, last_name=last_name, email=email,
@@ -44,10 +44,4 @@ def register(mcp: FastMCP) -> None:
             page=page, page_size=page_size, sort_by=sort,
         )
         result = await call_lib(user.query, query)
-        return {
-            "users": [user_compact(u) for u in result.items],
-            "total_count": result.total_count,
-            "page": result.page_number,
-            "page_size": result.page_size,
-            "has_next": result.has_next,
-        }
+        return paged_result("users", [user_compact(u) for u in result.items], result)

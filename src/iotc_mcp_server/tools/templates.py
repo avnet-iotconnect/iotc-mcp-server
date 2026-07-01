@@ -14,7 +14,7 @@ from avnet.iotconnect.restapi.lib import template
 from avnet.iotconnect.restapi.lib.template import TemplateQuery
 
 from ..errors import call_lib
-from ..serialization import full_record, template_compact
+from ..serialization import full_record, paged_result, template_compact
 
 _READ = ToolAnnotations(readOnlyHint=True)
 _DESTRUCTIVE = ToolAnnotations(readOnlyHint=False, destructiveHint=True)
@@ -37,7 +37,8 @@ def register(mcp: FastMCP) -> None:
 
         `auth_type` is the numeric x509/key auth type (2=CA-signed, 3=self-signed,
         4=TPM, 5=symmetric-key, 7=CA-individual). Returns compact rows with the
-        template `code` (the friendly id used elsewhere) plus total_count and has_next.
+        template `code` (the friendly id used elsewhere) plus has_next (and total_count
+        when the server reports one).
         """
         query = TemplateQuery(
             name=name, auth_type=auth_type,
@@ -45,20 +46,15 @@ def register(mcp: FastMCP) -> None:
             page=page, page_size=page_size, sort_by=sort,
         )
         result = await call_lib(template.query, query)
-        return {
-            "templates": [template_compact(t) for t in result.items],
-            "total_count": result.total_count,
-            "page": result.page_number,
-            "page_size": result.page_size,
-            "has_next": result.has_next,
-        }
+        return paged_result("templates", [template_compact(t) for t in result.items], result)
 
     @mcp.tool(annotations=_READ)
     async def template_get(code: Optional[str] = None, guid: Optional[str] = None) -> dict:
         """Get one template's full record by template code (preferred) or GUID.
 
-        Use the GUID when you already have one (e.g. from a device record). Returns
-        {"found": false}if no such template exists.
+        Includes the template's commands and its telemetry `attributes` (the data points
+        a device may report - name, type, unit). Use the GUID when you already have one
+        (e.g. from a device record). Returns {"found": false} if no such template exists.
         """
         if code:
             t = await call_lib(template.get_by_template_code, code)
@@ -68,7 +64,9 @@ def register(mcp: FastMCP) -> None:
             return {"error": "Provide either code or guid."}
         if t is None:
             return {"found": False}
-        return full_record(t)
+        record = full_record(t)
+        record["attributes"] = await call_lib(template.get_attributes_normalized, t.guid)
+        return record
 
     @mcp.tool(annotations=_DESTRUCTIVE)
     async def template_create(

@@ -19,6 +19,7 @@ from typing import Any, Optional
 from avnet.iotconnect.restapi.lib.command import Command
 from avnet.iotconnect.restapi.lib.device import Device
 from avnet.iotconnect.restapi.lib.entity import Entity
+from avnet.iotconnect.restapi.lib.query import Page
 from avnet.iotconnect.restapi.lib.telemetry import DeviceSensorValue, TelemetryRecord
 from avnet.iotconnect.restapi.lib.template import Template
 from avnet.iotconnect.restapi.lib.user import User
@@ -29,6 +30,19 @@ def full_record(obj: Any) -> Any:
     if is_dataclass(obj) and not isinstance(obj, type):
         return {k: v for k, v in asdict(obj).items() if v is not None}
     return obj
+
+
+def paged_result(key: str, items: list, page: Page) -> dict:
+    """Shape a list tool's response: always page/page_size/has_next; total_count only if known."""
+    result = {
+        key: items,
+        "page": page.page_number,
+        "page_size": page.page_size,
+        "has_next": page.has_next,
+    }
+    if page.total_count is not None:
+        result["total_count"] = page.total_count
+    return result
 
 
 def _status(is_active: Optional[bool]) -> Optional[str]:
@@ -52,7 +66,6 @@ def entity_compact(e: Entity) -> dict:
         "guid": e.guid,
         "name": e.name,
         "parent_guid": e.parentEntityGuid,
-        "device_count": e.deviceCount,
     }
 
 

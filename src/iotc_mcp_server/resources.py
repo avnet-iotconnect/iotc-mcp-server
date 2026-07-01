@@ -19,7 +19,7 @@ INSTRUCTIONS = (
     "entity name, user email - they are resolved for you, so do not invent GUIDs. "
     "Entities form a tree, so 'under entity X' means X plus all its descendants - "
     "expand with entity_descendants first. List tools return compact projections "
-    "plus counts; use the matching *_get for a full record. Read iotc://guide/* for "
+    "plus paging info; use the matching *_get for a full record. Read iotc://guide/* for "
     "concepts. Writes (create/delete/activate device, send command) are real and "
     "irreversible - confirm with the user before calling them. If a tool reports an "
     "auth error, the user must run `iotconnect-cli configure` out-of-band."
@@ -33,8 +33,9 @@ commands) over natural language. Domains and their tools:
 
 - Devices: device_list, device_get, device_create, device_delete, device_set_active
 - Telemetry: telemetry_current, telemetry_recent, telemetry_history
-- Org tree: entity_list, entity_descendants
-- Catalog: template_list, user_list
+- Org tree: entity_list, entity_get, entity_descendants
+- Templates: template_list, template_get, template_create, template_delete
+- Users: user_list
 - Commands: command_send
 - Certs: generate_device_cert
 - Health: auth_status
@@ -69,7 +70,8 @@ To act on devices under an entity:
 2. For each returned entity guid, device_list(entity=<guid>).
 3. Aggregate the devices.
 
-entity_list returns the whole tree at once (it is small and unpaged).
+entity_list returns the whole tree at once (it is small and unpaged); use entity_get
+(by name or guid) for one entity's full record, including its address.
 """
 
 _TELEMETRY = """\
@@ -91,13 +93,18 @@ Times are UTC. History iterates per device, so large device lists cost more call
 _DEVICES = """\
 # Device lifecycle
 
-- Create (device_create): needs a template (code/GUID) and a DUID. If you pass a
-  `certificate` (PEM), it registers with it. If you omit it, the server generates a
-  self-signed EC cert + private key, registers the device, and returns BOTH - show
-  the private key to the user once and tell them to store it securely.
+- Create (device_create): needs a template (code/GUID) and a DUID. Pass a `certificate`
+  (PEM) to register with it, or omit it to have the server generate a self-signed EC
+  cert + private key, register, and return BOTH - show the private key once, tell the
+  user to store it, then clear the chat. The response also carries an `sdk_config` block
+  (platform, env, cpid, duid) for the device's SDK config.
 - Activate/deactivate (device_set_active): toggles connectivity status.
 - Delete (device_delete): irreversible. REST-created devices cannot be deleted from
   the web UI, so this tool is the intended path.
+
+Finding devices: `device_list` `duid_contains` is a case-insensitive substring match,
+so use device_get for one exact DUID. Lists give `has_next` (and `total_count` only when
+the server reports one) - page by has_next.
 
 `status` is active/inactive (connectivity). Auth types are numeric on templates:
 2=CA-signed, 3=self-signed, 4=TPM, 5=symmetric-key, 7=CA-individual.
@@ -120,6 +127,9 @@ _RECIPES = """\
 1. entity_descendants(name="Room23")
 2. device_list(entity=<guid>, status="inactive") per entity guid
 3. List them
+
+## What telemetry / commands does template 'envmon' support?
+1. template_get(code="envmon") -> metadata, `attributes` (telemetry schema), `commands`
 """
 
 _GUIDES = {
