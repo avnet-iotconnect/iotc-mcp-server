@@ -40,9 +40,10 @@ def register(mcp: FastMCP) -> None:
         `duid_contains` matches devices whose DUID contains that text (case-insensitive
         substring); for one exact device use device_get instead. `template` accepts a
         template code or GUID; `entity` accepts an entity name or GUID (resolved for you -
-        do not invent GUIDs). `sort` is a field plus direction, e.g. "displayName asc".
-        Returns compact rows plus has_next (and total_count when the server reports one);
-        use device_get for a single full record.
+        do not invent GUIDs). `sort` is a field plus direction, e.g. "displayName asc"
+        (NOTE: sorting by "displayName" is silently ignored by the backend; other sort
+        fields work normally). Returns compact rows plus has_next (and total_count when
+        the server reports one); use device_get for a single full record.
         """
         query = DeviceQuery(
             duid_contains=duid_contains, template=template, entity=entity,
