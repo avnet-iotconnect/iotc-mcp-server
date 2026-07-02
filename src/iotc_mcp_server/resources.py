@@ -33,7 +33,7 @@ Operates one /IOTCONNECT account (devices, telemetry, templates, users, entities
 commands) over natural language. Domains and their tools:
 
 - Devices: device_list, device_get, device_create, device_delete, device_set_active
-- Telemetry: telemetry_current, telemetry_recent, telemetry_history
+- Telemetry: telemetry_recent, telemetry_latest_value, telemetry_history
 - Org tree: entity_list, entity_get, entity_descendants
 - Templates: template_list, template_get, template_create, template_delete
 - Users: user_list
@@ -80,10 +80,11 @@ _TELEMETRY = """\
 
 Three reads, by intent:
 
-- telemetry_current(duid): the latest value of each attribute - the sensor
-  snapshot. Use for "what is it reading now".
-- telemetry_recent(duid, count): the last N raw points (count 10-50). Use for a
-  short recent trend on one device.
+- telemetry_recent(duid, count): the last N raw points (count 10-50). The default
+  read - use it for "show me recent telemetry" and short trends on one device.
+- telemetry_latest_value(duid): a single most-recent value per template attribute
+  - the mapped sensor snapshot (unmapped values ignored). Use for "what is each
+  sensor now".
 - telemetry_history(duids, last|from_time/to_time): the historical feed, newest
   first, for one or more devices. Give EITHER `last` ("15m"/"2h"/"1d") OR an ISO
   `from_time`/`to_time`. Window <= 7 days. Results are capped by `max_records`.
@@ -121,7 +122,7 @@ _RECIPES = """\
 ## Latest telemetry for all devices under entity Room23 (incl. children)
 1. entity_descendants(name="Room23")
 2. device_list(entity=<guid>) for each returned entity guid; collect DUIDs
-3. telemetry_current(duid) per device (or telemetry_history(duids=[...], last="15m"))
+3. telemetry_latest_value(duid) per device (or telemetry_history(duids=[...], last="15m"))
 4. Interpret and summarize for the user
 
 ## Register a new device 'sensor-12' on template 'envmon'

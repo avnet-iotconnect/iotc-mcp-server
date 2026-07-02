@@ -25,9 +25,13 @@ _HISTORY_DEFAULT_MAX = 200
 def register(mcp: FastMCP) -> None:
 
     @mcp.tool(annotations=_READ)
-    async def telemetry_current(duid: str) -> dict:
-        """Get the latest value of each of a device's attributes (its sensor snapshot)."""
-        values = await call_lib(telemetry.get_current_values, duid)
+    async def telemetry_latest_value(duid: str) -> dict:
+        """Get a single most-recent value per template attribute (the mapped sensor snapshot).
+
+        Exactly one value per mapped attribute; unmapped values are ignored. For the
+        last N raw data points (multiple records), use telemetry_recent instead.
+        """
+        values = await call_lib(telemetry.get_latest_value, duid)
         return {"duid": duid, "attributes": [sensor_value(v) for v in values]}
 
     @mcp.tool(annotations=_READ)
@@ -36,7 +40,7 @@ def register(mcp: FastMCP) -> None:
         count: int = 10,
         attributes: Optional[List[str]] = None,
     ) -> dict:
-        """Get the most recent N raw data points for a device (count must be 10-50).
+        """Get a device's last N raw data points (count 10-50); the go-to read for recent telemetry.
 
         Optionally restrict to specific `attributes` by name.
         """
