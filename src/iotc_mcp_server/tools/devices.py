@@ -91,6 +91,11 @@ def register(mcp: FastMCP) -> None:
 
         The response includes an `sdk_config` block (platform, env, cpid, duid, auth_type)
         - the non-secret values the device's SDK config (iotcDeviceConfig.json) needs.
+
+        IMPORTANT FOR LLM: Always present the complete sdk_config JSON to the user in
+        copy-paste-friendly format. If certs/keys are generated or provided, present those
+        in full PEM format as well. The user must have immediate access to all configuration
+        data needed for device provisioning and SDK setup.
         """
 
         def _sdk_config(duid: str, auth_type: int) -> dict:
