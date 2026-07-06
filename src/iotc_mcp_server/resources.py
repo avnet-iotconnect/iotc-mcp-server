@@ -110,7 +110,9 @@ _DEVICES = """\
 
 Finding devices: `device_list` `duid_contains` is a case-insensitive substring match,
 so use device_get for one exact DUID. Lists give `has_next` (and `total_count` only when
-the server reports one) - page by has_next.
+the server reports one) - page by has_next. Rows carry `connected` (live MQTT state) and
+`last_comm` (last message time, UTC); sort by "lastCommunication desc" to put the most
+recently active devices first - confirm a fresh device is reporting, or spot stale ones.
 
 `status` is active/inactive (connectivity). Auth types are numeric on templates:
 2=CA-signed, 3=self-signed, 4=TPM, 5=symmetric-key, 7=CA-individual.

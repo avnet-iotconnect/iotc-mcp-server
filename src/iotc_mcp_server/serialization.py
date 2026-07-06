@@ -52,13 +52,19 @@ def _status(is_active: Optional[bool]) -> Optional[str]:
 
 
 def device_compact(d: Device) -> dict:
-    return {
+    row = {
         "duid": d.uniqueId,
         "name": d.displayName,
         "status": _status(d.isActive),
         "template_guid": d.deviceTemplateGuid,
         "guid": d.guid,
     }
+    # Connectivity/recency from the list endpoint; omit when null (e.g. never-communicated).
+    if d.isConnected is not None:
+        row["connected"] = d.isConnected
+    if d.lastCommunication is not None:
+        row["last_comm"] = d.lastCommunication
+    return row
 
 
 def entity_compact(e: Entity) -> dict:
