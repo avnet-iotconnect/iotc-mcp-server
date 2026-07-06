@@ -7,6 +7,15 @@ Ask in plain language; the model resolves your device names, templates and entit
 calls the right REST endpoints, and hands back a shaped, human-readable answer instead
 of raw API JSON.
 
+This project can be used by configuring your favorite LLM client or Agent (Claude, ChatGPT, etc.)
+to use this server as a local MCP endpoint. For example, to use with the Claude Code CLI or VScode Plugin, 
+you only need to configure, start this MCP server and add the mcp.json sippet to your `.claude.json`
+or run:
+```bash
+claude mcp add --transport http iotconnect http://127.0.0.1:8000/mcp
+```
+
+
 A few examples of things you can do with this project:
 - **Walk the fleet like a status board.** "Which devices under Denver Office haven't
   reported in the last day?" expands the entity tree floor by floor, lists devices per
