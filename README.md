@@ -24,7 +24,7 @@ A few examples of things you can do with this project:
   JSON — follow up with "how did temperature trend over the last hour?" and the model
   reasons over the historical feed for you.
 - **Provision a device in one prompt.** "Register a new device 'sensor-12' on template
-  'envmon' and give me its cert" creates the device, generates the key pair, and returns
+  'envmon' and give me its cert and private key" creates the device, generates the key pair, and returns
   the SDK config block your firmware needs — no console screens.
 - **Act on what it finds.** "Reboot every inactive device in Room23" resolves the room,
   finds the offline devices, and sends the template-defined command to each one.
@@ -69,7 +69,6 @@ This stores a session token in the library's config (`~/.config/iotconnect/apicf
 which the library auto-refreshes on use indefinitely. The `auth_status` tool reports the logged-in
 user, account CPID and token validity without exposing secrets. If a tool reports an
 auth error, re-run `iotconnect-cli configure`.
-
 
 
 ## Run

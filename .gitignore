@@ -13,3 +13,7 @@ __pycache__/
 *.egg-info/
 /build/
 /dist/
+
+# when massaging for a release with absolute links
+/README.*.md
+

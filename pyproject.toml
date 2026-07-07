@@ -7,23 +7,36 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "iotc-mcp-server"
-version = "0.1.0"
-description = "MCP server exposing Avnet /IOTCONNECT REST API operations to MCP clients."
+dynamic = ["version"]
+description = "MCP for Avnet /IOTCONNECT REST API operations."
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "Avnet" }]
+authors = [
+    { name = "Nik Markovic", email = "nikola.markovic@avnet.com" },
+]
 license = { text = "MIT" }
-keywords = ["IoTConnect", "MCP", "AI", "agents"]
+keywords = [
+    "/IOTCONNECT",
+    "MCP",
+    "AI",
+    "agents",
+    "AWS",
+    "IoTCore",
+    "Azure",
+]
 dependencies = [
-    "mcp>=1.27.0",
+    "mcp>=1.27.2",
     "iotconnect-rest-api>=2.1.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/avnet-iotconnect/iotc-mcp-server"
 
-[project.scripts]
-iotc-mcp-server = "iotc_mcp_server.__main__:main"
-
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "iotc_mcp_server.__version__"}
+
+[project.scripts]
+iotc-mcp-server = "iotc_mcp_server.__main__:main"
