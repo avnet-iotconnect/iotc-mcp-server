@@ -6,7 +6,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "iotc-mcp-server"
+name = "iotconnect-mcp-server"
 dynamic = ["version"]
 description = "MCP for Avnet /IOTCONNECT REST API operations."
 readme = "README.md"
