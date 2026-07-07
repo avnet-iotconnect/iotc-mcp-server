@@ -11,7 +11,7 @@ This project can be used by configuring your favorite LLM client or Agent (Claud
 to use this server as a local MCP endpoint. For example, to use with the Claude Code CLI, 
 you only need to configure, start this MCP server (see below) and run:
 ```bash
-claude mcp add --transport http iotconnect http://127.0.0.1:8000/mcp
+claude mcp add --scope user --transport http iotconnect http://127.0.0.1:8000/mcp
 ```
 
 
