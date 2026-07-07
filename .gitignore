@@ -1,0 +1,19 @@
+/.idea/
+/.vscode/
+
+# Safe space for temporary work files or AI transient instrcutions
+/work*/
+/.ai
+
+
+# Python
+/.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+
+# when massaging for a release with absolute links
+/README.*.md
+
