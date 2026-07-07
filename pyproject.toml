@@ -26,7 +26,7 @@ keywords = [
 ]
 dependencies = [
     "mcp>=1.27.2",
-    "iotconnect-rest-api>=2.1.0",
+    "iotconnect-rest-api>=3.0.0,<4",
 ]
 
 [project.urls]
